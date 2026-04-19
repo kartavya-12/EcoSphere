@@ -67,7 +67,7 @@ export default function Dashboard() {
         title,
         description: linkedIssue ? `Event for issue: ${linkedIssue.title}` : 'New eco activity',
         location,
-        event_date: date,
+        date,
         organizer_id: user.id,
         organizer_name: user.name || 'Organization',
         status: 'upcoming',
