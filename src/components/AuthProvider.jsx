@@ -44,16 +44,34 @@ export default function AuthProvider({ children }) {
         .eq('id', authUser.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      let profileData = data;
+      
+      // If no profile exists, automatically construct and inject one to satisfy database constraints
+      if (error && error.code === 'PGRST116') {
+        const newProfile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || authUser.email.split('@')[0] || 'User',
+          role: authUser.user_metadata?.role || 'community',
+          trees_planted: 0,
+          cleanup_drives: 0,
+          rank: 'Eco-Warrior'
+        };
+        const { error: insertErr } = await supabase.from('profiles').insert([newProfile]);
+        if (!insertErr) {
+          profileData = newProfile;
+        }
+      } else if (error) {
+        throw error;
+      }
 
       setUser({
         id: authUser.id,
         email: authUser.email,
-        name: data?.name || authUser.user_metadata.name || 'User',
-        role: data?.role || authUser.user_metadata.role || 'community',
-        trees_planted: data?.trees_planted || 0,
-        cleanup_drives: data?.cleanup_drives || 0,
-        rank: data?.rank || 'Eco-Warrior',
+        name: profileData?.name || authUser.user_metadata?.name || 'User',
+        role: profileData?.role || authUser.user_metadata?.role || 'community',
+        trees_planted: profileData?.trees_planted || 0,
+        cleanup_drives: profileData?.cleanup_drives || 0,
+        rank: profileData?.rank || 'Eco-Warrior',
       });
     } catch (err) {
       console.error('Auth Profile Fetch Error:', err);
