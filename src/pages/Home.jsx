@@ -227,7 +227,7 @@ export default function Home() {
                 <div className="card" key={act.id || i}>
                   <h3>{act.title}</h3>
                   <p>Location: {act.location || 'Remote/TBD'}</p>
-                  <p>Date: {new Date(act.event_date || act.date || Date.now()).toLocaleDateString()}</p>
+                  <p>Date: {act.event_date || act.date ? new Date(act.event_date || act.date).toLocaleDateString() : 'TBD'}</p>
                   <button onClick={() => handleJoinEvent(act.id)} disabled={hasJoined || act.status === 'completed'}>
                     {hasJoined ? 'Joined ✓' : 'Join'}
                   </button>

@@ -9,7 +9,7 @@ export default function Dashboard() {
   const { user, loading: authLoading, logout } = useAuth();
   const { reports, loading: reportsLoading, updateReportStatus } = useReports();
   const { events, loading: eventsLoading, addEvent } = useEvents();
-  const { registrations, loading: regLoading, registerForEvent } = useRegistrations();
+  const { registrations, registerForEvent, updateRegistrationStatus } = useRegistrations();
   const { stats, loading: statsLoading } = useGlobalStats();
   const navigate = useNavigate();
 
@@ -71,9 +71,7 @@ export default function Dashboard() {
         organizer_id: user.id,
         organizer_name: user.name || 'Organization',
         status: 'upcoming',
-        issue_id: linkedIssue?.id || null, // Newly requested field
-        created_by: user.id, // For schema compatibility
-        date: date // For schema compatibility
+        issue_id: linkedIssue?.id || null // Newly requested field
       });
       alert('Event Created successfully!');
       setCreatingEvent(false);
@@ -280,7 +278,7 @@ export default function Dashboard() {
 
                     <div style={{ marginTop: '20px' }}>
                       <h4>My Events & Volunteers</h4>
-                      {events.filter(e => e.organizer_id === user.id || e.created_by === user.id).map(event => {
+                      {events.filter(e => e.organizer_id === user.id).map(event => {
                         const eventRegs = registrations.filter(r => r.event_id === event.id);
                         return (
                           <div key={event.id} style={{ borderBottom: '1px solid #444', paddingBottom: '15px', marginBottom: '15px' }}>

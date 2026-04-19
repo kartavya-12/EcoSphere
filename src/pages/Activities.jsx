@@ -48,7 +48,7 @@ export default function Activities() {
                   <img src={act.img || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=500&q=80'} alt={act.title} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
                   <h3>{act.title}</h3>
                   <p>Location: {act.location}</p>
-                  <p>Date: {new Date(act.event_date || act.date || Date.now()).toLocaleDateString()}</p>
+                  <p>Date: {act.event_date || act.date ? new Date(act.event_date || act.date).toLocaleDateString() : 'TBD'}</p>
                   <button onClick={() => handleJoinEvent(act.id)} disabled={hasJoined || act.status === 'completed'}>
                     {hasJoined ? 'Joined ✓' : 'Join'}
                   </button>
