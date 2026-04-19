@@ -63,7 +63,11 @@ export default function AuthModal({ isOpen, onClose }) {
       handleClose();
       navigate('/dashboard');
     } catch (error) {
-      alert(error.message || 'Signup failed');
+      if (error.message && error.message.toLowerCase().includes('rate limit')) {
+        alert('Supabase email rate limit exceeded!\n\nSince you are testing frequently, you have hit the free tier signup limit. \n\nWorkarounds:\n1. Try logging in if the account was already created.\n2. Use a different dummy email address.\n3. Wait about an hour.\n4. Go to Supabase Dashboard -> Auth -> Rate Limits and increase the limits.');
+      } else {
+        alert(error.message || 'Signup failed');
+      }
     }
   }
 
