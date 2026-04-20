@@ -7,18 +7,14 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active session and rigorously verify it's not a stale/deleted user
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (error || !user) {
-        supabase.auth.signOut();
-        setLoading(false);
-      } else {
-        fetchProfile(user);
-      }
-    }).catch(() => setLoading(false));
+    let initialized = false;
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Prevent redundant initial fetches if multiple events fire
+      if (event === 'INITIAL_SESSION' && initialized) return;
+      if (event === 'INITIAL_SESSION') initialized = true;
+
       if (session) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
@@ -64,7 +60,7 @@ export default function AuthProvider({ children }) {
           rank: 'Eco-Warrior'
         };
         const { error: insertErr } = await supabase.from('profiles').insert([newProfile]);
-        if (insertErr) {
+        if (insertErr && insertErr.code !== '23505') { // Ignore duplicate key errors from concurrent runs
            console.error("Failed to inject missing profile. Stale session?", insertErr);
            await supabase.auth.signOut();
            setUser(null);
@@ -105,11 +101,8 @@ export default function AuthProvider({ children }) {
       setLoading(false);
       throw error;
     }
-    if (data.user) {
-      await fetchProfile(data.user);
-    } else {
-      setLoading(false);
-    }
+    // onAuthStateChange handles fetchProfile automatically via SIGNED_IN event
+    // returning user just to fulfill promise chain before redirect
     return data.user;
   }
 
@@ -133,10 +126,13 @@ export default function AuthProvider({ children }) {
 
     // Create profile entry
     if (data.user) {
-      await supabase.from('profiles').insert([
+      const { error: insertError } = await supabase.from('profiles').insert([
         { id: data.user.id, name, org_name, department, role }
       ]);
-      await fetchProfile(data.user);
+      if (insertError && insertError.code !== '23505') {
+        console.error("Signup profile insert error:", insertError);
+      }
+      // onAuthStateChange handles fetchProfile
     } else {
       setLoading(false);
     }
